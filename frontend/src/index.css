@@ -1,0 +1,215 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f4f8fb;
+  color: #222;
+}
+
+.login-container, .dashboard-container {
+  max-width: 500px;
+  margin: 60px auto;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 60, 120, 0.07);
+}
+
+input, button, select, textarea {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  background: #f7fbff;
+  transition: border 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #60a5fa;
+  outline: none;
+}
+
+button {
+  background: linear-gradient(90deg, #60a5fa 0%, #38bdf8 100%);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+button:hover {
+  background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%);
+}
+
+.error {
+  color: #e11d48;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #e0e7ef;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 8px rgba(0,60,120,0.04);
+  margin-bottom: 2rem;
+  border-radius: 0 0 12px 12px;
+}
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #2563eb;
+}
+.navbar-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.navbar-links a {
+  text-decoration: none;
+  color: #2563eb;
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 0.2rem 0.7rem;
+  transition: background 0.15s;
+}
+.navbar-links a:hover {
+  background: #dbeafe;
+}
+.logout-btn {
+  background: #f1f5f9;
+  color: #2563eb;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 1rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.logout-btn:hover {
+  background: #dbeafe;
+}
+
+.summary-cards {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.summary-card {
+  background: #e0f2fe;
+  padding: 1.2rem 2rem;
+  border-radius: 10px;
+  min-width: 140px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0,60,120,0.03);
+}
+.summary-amount {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  color: #2563eb;
+}
+
+.category-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.category-card {
+  background: #f7fbff;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  min-width: 160px;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 4px rgba(0,60,120,0.03);
+}
+.category-name {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #0ea5e9;
+}
+.category-total {
+  font-size: 1.1rem;
+  color: #2563eb;
+  font-weight: bold;
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.expense-form {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  min-width: 320px;
+  box-shadow: 0 2px 12px rgba(0,60,120,0.08);
+}
+.expense-form input,
+.expense-form select,
+.expense-form textarea {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.7rem;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #f7fbff;
+}
+.expense-form textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+.expense-form button {
+  width: auto;
+}
+table {
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+table th, table td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #e0e7ef;
+  text-align: left;
+}
+table th {
+  background: #e0e7ef;
+  color: #2563eb;
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+    border-radius: 0 0 10px 10px;
+  }
+  .summary-cards, .category-cards {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .summary-card, .category-card {
+    min-width: unset;
+    width: 100%;
+  }
+  .dashboard-container, .login-container {
+    max-width: 98vw;
+    padding: 1rem;
+  }
+} 
