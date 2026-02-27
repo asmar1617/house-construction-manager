@@ -13,14 +13,15 @@ function Login() {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch(process.env.REACT_APP_API_URL + '/admin/login', {
+      const apiUrl = process.env.REACT_APP_API_URL || '/api';
+      const res = await fetch(apiUrl + '/auth/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Login failed');
-      login(data.token);
+      if (!res.ok) throw new Error(data.detail || data.message || 'Login failed');
+      login(data.token, data.user || { role: 'admin' });
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -28,14 +29,16 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
-      <h2>Admin Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
-        <button type="submit">Login</button>
-        {error && <div className="error">{error}</div>}
-      </form>
+    <div className="login-page">
+      <div className="login-container">
+        <h2>Login</h2>
+        <form onSubmit={handleSubmit}>
+          <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
+          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+          <button type="submit">Login</button>
+          {error && <div className="error">{error}</div>}
+        </form>
+      </div>
     </div>
   );
 }

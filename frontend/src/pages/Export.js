@@ -1,21 +1,31 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 
+const api = process.env.REACT_APP_API_URL || '/api';
+
 function Export() {
   const handleExport = () => {
-    const token = localStorage.getItem('token');
-    window.open(process.env.REACT_APP_API_URL + '/export/expenses?token=' + token, '_blank');
+    window.open(api + '/export/expenses/', '_blank');
   };
 
   return (
-    <div>
+    <div className="app-layout">
       <Navbar />
-      <div className="dashboard-container">
-        <h1>Export Expenses</h1>
-        <button onClick={handleExport}>Download CSV</button>
-      </div>
+      <main className="app-main">
+        <div className="page-header">
+          <h1>Export</h1>
+          <p>Download expenses as CSV</p>
+        </div>
+
+        <div className="card" style={{ maxWidth: '400px' }}>
+          <p style={{ margin: '0 0 1rem', color: 'var(--text-muted)' }}>
+            Download all expenses in a spreadsheet-friendly format.
+          </p>
+          <button onClick={handleExport}>Download CSV</button>
+        </div>
+      </main>
     </div>
   );
 }
 
-export default Export; 
+export default Export;

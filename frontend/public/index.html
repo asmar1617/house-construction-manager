@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Construction Cost Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <script>
+      (function() {
+        function fix(el) {
+          if (!el) return;
+          if (el.getAttribute('data-cursor-element-id')) el.removeAttribute('data-cursor-element-id');
+          var s = el.getAttribute('style');
+          if (s && /crosshair/i.test(s)) {
+            s = s.replace(/cursor\s*:\s*crosshair\s*;?/gi, '').trim();
+            if (s) el.setAttribute('style', s); else el.removeAttribute('style');
+          }
+          el.style.setProperty('cursor', 'default', 'important');
+        }
+        function fixAll() {
+          fix(document.body);
+          fix(document.documentElement);
+        }
+        fixAll();
+        setInterval(fixAll, 16);
+        if (typeof requestAnimationFrame !== 'undefined') {
+          function loop() { fixAll(); requestAnimationFrame(loop); }
+          requestAnimationFrame(loop);
+        }
+        if (typeof MutationObserver !== 'undefined' && document.body) {
+          var obs = new MutationObserver(function() { fixAll(); });
+          obs.observe(document.body, { attributes: true, attributeFilter: ['style', 'data-cursor-element-id'] });
+          if (document.documentElement && document.documentElement !== document.body) {
+            obs.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'data-cursor-element-id'] });
+          }
+        }
+      })();
+    </script>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
