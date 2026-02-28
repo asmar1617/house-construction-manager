@@ -95,3 +95,25 @@ Do **Part 1** first (backend), then **Part 2** (frontend). At the end, set CORS 
 - **Django Admin:** `https://construction-api.onrender.com/admin/` (log in with the superuser you created).
 
 If the app shows “Invalid credentials” or network errors, check that `REACT_APP_API_URL` is exactly `https://your-render-url/api` and that `CORS_ORIGINS` on Render is exactly your Vercel URL.
+
+---
+
+## "Failed to fetch" or CORS errors
+
+1. **Quick fix: allow all origins (unblocks immediately)**  
+   In Render → your service → **Environment** → add:
+   - **Key:** `CORS_ALLOW_ALL_ORIGINS`
+   - **Value:** `1`  
+   **Save** and **redeploy**. The frontend should then be able to call the API. (Optional: later you can remove this and set `CORS_ORIGINS` to only your Vercel URL for tighter security.)
+
+2. **Or set CORS to your Vercel URL only**  
+   In Render → your service → **Environment** → add or edit:
+   - **Key:** `CORS_ORIGINS`
+   - **Value:** your **exact** Vercel URL, e.g. `https://house-construction-manager.vercel.app`  
+   No trailing slash, no spaces. Then **Save** and **redeploy** the service.
+
+3. **Backend might be sleeping (Render free tier)**  
+   Free services spin down after ~15 min of no traffic. The first request after that can take 30–60 seconds and may time out. Open your **Render service URL** in a new tab (e.g. `https://house-construction-manager.onrender.com`) and wait until you see the API message. Then try logging in again from the Vercel app.
+
+4. **Check the API URL on Vercel**  
+   In Vercel → Project → **Settings** → **Environment Variables**, ensure **`REACT_APP_API_URL`** is set to `https://your-render-service.onrender.com/api` (with `/api` at the end). After changing it, **redeploy** the frontend (env vars are applied at build time).

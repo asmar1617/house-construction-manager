@@ -80,8 +80,11 @@ if os.environ.get("EMAIL_HOST"):
     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+# CORS: allow all origins if DEBUG or if CORS_ALLOW_ALL_ORIGINS=1 (e.g. to fix "Failed to fetch" on Render)
+# For production, set CORS_ORIGINS to your frontend URL(s) instead and leave CORS_ALLOW_ALL_ORIGINS unset.
+CORS_ALLOW_ALL_ORIGINS = DEBUG or os.environ.get("CORS_ALLOW_ALL_ORIGINS", "").strip().lower() in ("1", "true", "yes")
+_cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
