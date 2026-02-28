@@ -60,14 +60,11 @@ Clients (viewers) can receive a daily email reminding them to check that day’s
 
 ## Deployment (Vercel + Render)
 
-- **Frontend:** Deploy the **React** app on [Vercel](https://vercel.com). Set **Root Directory** to `frontend` and add env var **`REACT_APP_API_URL`** = `https://your-backend-url/api`.
-- **Backend:** Deploy the **Django** API on [Render](https://render.com) (Web Service).  
-  - **Build:** `cd backend_django && pip install -r requirements.txt`  
-  - **Start:** `cd backend_django && gunicorn config.wsgi:application`  
-  - Set env: `DEBUG=False`, `DJANGO_SECRET_KEY`, `ALLOWED_HOSTS`, `CORS_ORIGINS` (your Vercel URL).
-- **CORS:** In Render, set `CORS_ORIGINS` to your Vercel app URL (e.g. `https://your-app.vercel.app`) so the frontend can call the API.
+**Step-by-step:** see **[DEPLOY.md](DEPLOY.md)**.
 
-Details (PostgreSQL, migrations, collectstatic): see **`backend_django/README.md`**.
+- **Backend:** [Render](https://render.com) (Web Service). Build/start commands and env vars are in DEPLOY.md. Optional: use **New → Blueprint** and connect the repo to use `render.yaml`.
+- **Frontend:** [Vercel](https://vercel.com). Root Directory = `frontend`, env var `REACT_APP_API_URL` = your Render API URL + `/api`.
+- **CORS:** Set `CORS_ORIGINS` on Render to your Vercel URL after both are deployed.
 
 ## License
 

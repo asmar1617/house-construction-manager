@@ -4,12 +4,12 @@ from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import path, include
 def spa_serve(request, path=None):
-    """Serve React build index.html for SPA (so frontend and backend run from runserver)."""
+    """Serve React build index.html for SPA (local). When no build (e.g. API-only on Render), return API info."""
     index_path = settings.FRONTEND_BUILD_DIR / "index.html"
     if not index_path.exists():
         return HttpResponse(
-            "Frontend not built. Run: cd frontend && npm install && npm run build",
-            status=503,
+            "Construction Cost Manager API. Use /api/ for endpoints. Frontend: deploy separately (e.g. Vercel).",
+            status=200,
             content_type="text/plain",
         )
     return HttpResponse(index_path.read_bytes(), content_type="text/html")

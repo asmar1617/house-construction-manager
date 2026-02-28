@@ -1,0 +1,17 @@
+# Render Blueprint: Backend API only (frontend deploys to Vercel)
+# Use "New > Blueprint" in Render and connect this repo, or create Web Service manually.
+services:
+  - type: web
+    name: construction-api
+    runtime: python
+    rootDir: backend_django
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn config.wsgi:application
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+    # Add in Render dashboard: ALLOWED_HOSTS (.onrender.com), CORS_ORIGINS (your Vercel URL)
