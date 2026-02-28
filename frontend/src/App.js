@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DarkVeil from './components/DarkVeil';
+import ApiConnectionBanner from './components/ApiConnectionBanner';
 import useAuth from './hooks/useAuth';
 import PublicDashboard from './pages/PublicDashboard';
 import Login from './pages/Login';
@@ -31,6 +32,7 @@ function App() {
 
   return (
     <div className="app-with-veil">
+      <ApiConnectionBanner />
       <DarkVeil />
       <Routes>
         {isAdmin ? (

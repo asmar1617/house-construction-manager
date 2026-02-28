@@ -66,10 +66,11 @@ Do **Part 1** first (backend), then **Part 2** (frontend). At the end, set CORS 
    - **Build Command:** `npm run build` (default)
    - **Output Directory:** `build` (default)
 
-4. **Environment variable:**
+4. **Environment variable (required for amounts and login to work):**
    - **Name:** `REACT_APP_API_URL`
-   - **Value:** `https://construction-api.onrender.com/api`  
-   *(Use your real Render URL from Part 1, with `/api` at the end.)*
+   - **Value:** `https://house-construction-manager.onrender.com/api`  
+   *(Use your real Render URL with `/api` at the end, no trailing slash.)*
+   - **Important:** This value is baked in at **build time**. If you add or change it later, you must **Redeploy** the frontend (Deployments → … → Redeploy). Otherwise the app will keep calling the wrong URL and amounts/login will fail.
 
 5. Click **Deploy**. Wait for the build to finish.
 

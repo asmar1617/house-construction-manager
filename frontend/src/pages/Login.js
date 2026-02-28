@@ -19,7 +19,14 @@ function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setError('Invalid response from server. Set REACT_APP_API_URL to your backend URL (e.g. https://your-api.onrender.com/api) and redeploy.');
+        return;
+      }
       if (!res.ok) throw new Error(data.detail || data.message || 'Login failed');
       login(data.token, data.user || { role: 'admin' });
       navigate('/');

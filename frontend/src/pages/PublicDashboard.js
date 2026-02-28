@@ -92,8 +92,11 @@ function PublicDashboard() {
 
   useEffect(() => {
     fetch(api + '/budget/summary/')
-      .then(res => res.json())
-      .then(data => { setSummary(data); setLoadingSummary(false); })
+      .then(res => {
+        if (!res.ok) return res.text().then(() => null);
+        return res.json();
+      })
+      .then(data => { setSummary(data || null); setLoadingSummary(false); })
       .catch(() => setLoadingSummary(false));
   }, []);
 
@@ -202,7 +205,10 @@ function PublicDashboard() {
           </>
         ) : (
           <div className="card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '1.5rem' }}>
-            Could not load summary.
+            <p>Could not load summary.</p>
+            <p style={{ fontSize: '0.9rem', opacity: 0.9, marginTop: '0.5rem' }}>
+              Open the backend URL (Render) in a new tab to wake it, then refresh. If it still fails, check that the API URL and CORS are set (see DEPLOY.md).
+            </p>
           </div>
         )}
 
