@@ -13,7 +13,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ProjectSettings)
 class ProjectSettingsAdmin(admin.ModelAdmin):
-    list_display = ["project_title", "budget_label", "target_budget"]
+    list_display = ["project_title", "budget_label", "target_budget", "daily_reminder_emails"]
 
 
 @admin.register(FundEntry)

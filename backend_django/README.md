@@ -47,6 +47,41 @@ Then open **http://127.0.0.1:8000/** — you get the React app and the API from 
 - `POST /api/expenses/<id>/undo/` – undo soft-delete (admin only)
 - `GET /api/export/expenses/` – CSV download
 
+## Daily reminder email (client notification)
+
+The app can send a **daily email** to clients (viewers) reminding them to check that day’s expenses.
+
+**Who receives it**
+
+- Every user with **Profile role = Viewer** who has an **email** set (in Django admin → Users).
+- Any extra addresses in **Project settings** → **Daily reminder emails** (comma-separated).
+
+**Run the reminder (once per day)**
+
+```bash
+cd backend_django
+python manage.py send_daily_expense_reminder
+```
+
+- **Test without sending:** `python manage.py send_daily_expense_reminder --dry-run`
+
+**Schedule it (run every day)**
+
+- **Windows:** Task Scheduler – create a daily task that runs the command above (e.g. 8:00 PM).
+- **Linux/Mac:** Add to crontab, e.g. daily at 20:00:  
+  `0 20 * * * cd /path/to/backend_django && python manage.py send_daily_expense_reminder`
+- **Render / other hosts:** Use their cron or scheduled job feature to run the same command.
+
+**Email configuration**
+
+- **Development:** By default emails are **printed to the console** (no SMTP). Run the command and check the terminal.
+- **Production (real email):** Set environment variables:
+  - `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`
+  - `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`
+  - `EMAIL_USE_TLS=true` (for port 587)
+  - `DEFAULT_FROM_EMAIL` (e.g. `noreply@yourdomain.com`)
+  - `BASE_URL` (e.g. `https://your-app.onrender.com`) so the link in the email is correct.
+
 ## Free deployment
 
 - Use SQLite (default); no DB host needed.

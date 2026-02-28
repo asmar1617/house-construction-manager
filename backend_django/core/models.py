@@ -24,6 +24,8 @@ class ProjectSettings(models.Model):
     project_title = models.CharField(max_length=200, default="Home Construction Project")
     budget_label = models.CharField(max_length=100, default="Total Budget")
     target_budget = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0"))
+    # Extra emails for daily expense reminder (comma-separated). Viewers with email also get it.
+    daily_reminder_emails = models.CharField(max_length=500, blank=True)
 
     class Meta:
         verbose_name_plural = "Project settings"
