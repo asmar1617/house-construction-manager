@@ -82,22 +82,89 @@ function PublicDashboard() {
   const [categories, setCategories] = useState([]);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingExpenses, setLoadingExpenses] = useState(true);
+  const [summaryRetryMessage, setSummaryRetryMessage] = useState('');
+
+  const fetchSummaryOnce = React.useCallback(() => {
+    setLoadingSummary(true);
+    setSummaryRetryMessage('');
+    return fetch(api + '/budget/summary/')
+      .then(res => {
+        if (!res.ok) return res.text().then(() => null);
+        return res.json();
+      })
+      .then(data => {
+        if (data && typeof data.total_available !== 'undefined') {
+          setSummary(data);
+        } else {
+          setSummary(null);
+        }
+        setLoadingSummary(false);
+        setSummaryRetryMessage('');
+      })
+      .catch(() => {
+        setSummary(null);
+        setLoadingSummary(false);
+        setSummaryRetryMessage('');
+      });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timeouts = [];
+
+    const tryFetch = (attempt) => {
+      if (cancelled) return;
+      if (attempt > 0) setSummaryRetryMessage('Backend may be waking up (Render). Retrying…');
+      setLoadingSummary(true);
+      fetch(api + '/budget/summary/')
+        .then(res => {
+          if (cancelled) return null;
+          if (!res.ok) return res.text().then(() => null);
+          return res.json();
+        })
+        .then(data => {
+          if (cancelled) return;
+          if (data && typeof data.total_available !== 'undefined') {
+            setSummary(data);
+            setSummaryRetryMessage('');
+            setLoadingSummary(false);
+            return;
+          }
+          if (attempt < 2) {
+            const delay = attempt === 0 ? 5000 : 12000;
+            const t = setTimeout(() => tryFetch(attempt + 1), delay);
+            timeouts.push(t);
+          } else {
+            setSummary(null);
+            setSummaryRetryMessage('');
+            setLoadingSummary(false);
+          }
+        })
+        .catch(() => {
+          if (cancelled) return;
+          if (attempt < 2) {
+            const delay = attempt === 0 ? 5000 : 12000;
+            const t = setTimeout(() => tryFetch(attempt + 1), delay);
+            timeouts.push(t);
+          } else {
+            setSummary(null);
+            setSummaryRetryMessage('');
+            setLoadingSummary(false);
+          }
+        });
+    };
+    tryFetch(0);
+    return () => {
+      cancelled = true;
+      timeouts.forEach(t => clearTimeout(t));
+    };
+  }, []);
 
   useEffect(() => {
     fetch(api + '/categories/')
       .then(res => res.json())
       .then(data => setCategories(Array.isArray(data) ? data : []))
       .catch(() => setCategories([]));
-  }, []);
-
-  useEffect(() => {
-    fetch(api + '/budget/summary/')
-      .then(res => {
-        if (!res.ok) return res.text().then(() => null);
-        return res.json();
-      })
-      .then(data => { setSummary(data || null); setLoadingSummary(false); })
-      .catch(() => setLoadingSummary(false));
   }, []);
 
   useEffect(() => {
@@ -160,7 +227,10 @@ function PublicDashboard() {
             getExpenseId={id}
           />
         ) : loadingSummary ? (
-          <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>Loading summary…</div>
+          <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
+            Loading summary…
+            {summaryRetryMessage && <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', opacity: 0.9 }}>{summaryRetryMessage}</p>}
+          </div>
         ) : summary ? (
           <>
             <div className="summary-grid">
@@ -207,8 +277,11 @@ function PublicDashboard() {
           <div className="card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '1.5rem' }}>
             <p>Could not load summary.</p>
             <p style={{ fontSize: '0.9rem', opacity: 0.9, marginTop: '0.5rem' }}>
-              Open the backend URL (Render) in a new tab to wake it, then refresh. If it still fails, check that the API URL and CORS are set (see DEPLOY.md).
+              The backend (Render) may be sleeping. Open your Render URL in a new tab to wake it, then click Retry below.
             </p>
+            <button type="button" className="spending-log-btn" style={{ marginTop: '1rem' }} onClick={() => fetchSummaryOnce()}>
+              Retry
+            </button>
           </div>
         )}
 
