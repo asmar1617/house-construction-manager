@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("health/", views.health),
+    path("debug-db/", views.debug_db),
     path("auth/login/", views.login),
     path("auth/me/", views.auth_me),
     path("settings/", views.settings_view),

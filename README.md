@@ -24,7 +24,7 @@ A full-stack app to track construction budget, expenses by category, and daily s
 
    This builds the React app and starts Django. Open **http://127.0.0.1:8000/** in your browser.
 
-3. **First-time setup**
+3. **First-time setup** (no virtual environment required; use your system Python)
    ```bash
    cd backend_django
    pip install -r requirements.txt

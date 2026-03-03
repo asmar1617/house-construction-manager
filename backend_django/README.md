@@ -4,6 +4,8 @@ API for the Construction Cost Manager. For **run** and **deploy** see the [proje
 
 ## Setup (first time)
 
+No virtual environment required; use your system Python.
+
 ```bash
 pip install -r requirements.txt
 python manage.py migrate

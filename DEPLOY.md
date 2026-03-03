@@ -2,6 +2,8 @@
 
 Do **Part 1** first (backend), then **Part 2** (frontend). At the end, set CORS so the frontend can call the API.
 
+**Want your data to persist when the app sleeps or has no traffic for weeks?** Keep Render and add a free **Neon** PostgreSQL database, or use another host: see **[DEPLOY-FREE-PERSISTENT.md](DEPLOY-FREE-PERSISTENT.md)** (Neon + Render, Neon + Railway, or Fly.io).
+
 ---
 
 ## Part 1: Deploy backend on Render
@@ -24,7 +26,7 @@ Do **Part 1** first (backend), then **Part 2** (frontend). At the end, set CORS 
      ```
    - **Start Command:**
      ```bash
-     cd backend_django && gunicorn config.wsgi:application
+     cd backend_django && python manage.py migrate --noinput && gunicorn config.wsgi:application
      ```
 
 5. **Environment variables** (Add one by one):
@@ -34,19 +36,15 @@ Do **Part 1** first (backend), then **Part 2** (frontend). At the end, set CORS 
    | `DEBUG` | `False` |
    | `DJANGO_SECRET_KEY` | Create a long random string (e.g. [generate](https://djecrety.ir/) or use a password generator) |
    | `ALLOWED_HOSTS` | `construction-api.onrender.com` *(replace with your service name if different)* |
-   | `CORS_ORIGINS` | Leave empty for now; add your Vercel URL after Part 2 |
+   | `CORS_ORIGINS` | Optional. All `*.vercel.app` URLs (production + preview) are allowed by default. Add a comma-separated list only if you need extra origins. |
    | `BASE_URL` | `https://construction-api.onrender.com` *(your Render service URL)* |
 
 6. Click **Create Web Service**. Wait for the first deploy (may take a few minutes).
 
-7. **Run migrations (first time):**  
-   In Render → your service → **Shell** tab (or use a one-off job), run:
+7. **Create an admin user (first time):**  
+   With the Start Command above, migrations run automatically on each deploy. In Render → your service → **Shell** tab, run:
    ```bash
-   cd backend_django && python manage.py migrate
-   ```
-   Then create an admin user:
-   ```bash
-   python manage.py createsuperuser
+   cd backend_django && python manage.py createsuperuser
    ```
    (Follow prompts. If Shell doesn’t support interactive input, create the user in Django admin after opening the API URL in the browser and adding `/admin/`.)
 
@@ -118,3 +116,50 @@ If the app shows “Invalid credentials” or network errors, check that `REACT_
 
 4. **Check the API URL on Vercel**  
    In Vercel → Project → **Settings** → **Environment Variables**, ensure **`REACT_APP_API_URL`** is set to `https://your-render-service.onrender.com/api` (with `/api` at the end). After changing it, **redeploy** the frontend (env vars are applied at build time).
+
+---
+
+## 500 errors and "Cannot connect to the API"
+
+If the frontend shows "Cannot connect to the API" and the browser reports **500 Internal Server Error** (and sometimes CORS), the backend is crashing when handling requests. Do the following **on Render**:
+
+### 1. Start Command must run migrations
+
+Render only runs migrations if they are in the **Start Command**. If you created the service manually (or changed the name), the Start Command in the dashboard overrides `render.yaml`.
+
+- In **Render** → your backend service → **Settings** → **Build & Deploy** → check **Root Directory**:
+  - **If Root Directory is empty** (repo root), use:
+    ```bash
+    cd backend_django && python manage.py migrate --noinput && gunicorn config.wsgi:application
+    ```
+  - **If Root Directory is `backend_django`** (Blueprint or you set it), use (no `cd`):
+    ```bash
+    python manage.py migrate --noinput && gunicorn config.wsgi:application
+    ```
+- Paste the matching command into **Start Command** → **Save Changes** → **Manual Deploy** → **Deploy latest commit**. Wait for the deploy to finish.
+
+### 2. ALLOWED_HOSTS must match your Render URL
+
+- In **Render** → your service → **Environment**.
+- **`ALLOWED_HOSTS`** must be the **hostname** of your backend (no `https://`, no path). Examples:
+  - If your API URL is `https://house-construction-manager.onrender.com`, set:
+    ```text
+    house-construction-manager.onrender.com
+    ```
+  - If your API URL is `https://construction-api.onrender.com`, set:
+    ```text
+    construction-api.onrender.com
+    ```
+- **Save** and redeploy if you changed it.
+
+### 3. See the real error in Render Logs
+
+- In **Render** → your service → **Logs**.
+- In another tab, open your Vercel app and refresh (or click until a request is sent).
+- In the Logs tab you should see a **Python traceback** (e.g. `no such table`, `ModuleNotFoundError`, etc.). That tells you the exact fix.
+
+### 4. Test the API with a health check (no database)
+
+- Open in your browser: `https://your-render-url.onrender.com/api/health/`  
+  (e.g. `https://house-construction-manager.onrender.com/api/health/`)
+- If you see `{"status":"ok"}`, the server is up. If you still get 500 or CORS from the **Vercel app**, check Logs as in step 3 and ensure Start Command and ALLOWED_HOSTS are set as above.

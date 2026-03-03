@@ -19,6 +19,30 @@ from .serializers import (
 from .permissions import IsAdminOrReadOnly
 
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health(request):
+    """No DB; use this to verify API is up and CORS works from the frontend."""
+    return Response({"status": "ok"})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def debug_db(request):
+    """Return which database Django is using (to verify DATABASE_URL / Neon). Safe to remove later."""
+    from django.conf import settings
+    db = settings.DATABASES["default"]
+    engine = db.get("ENGINE", "")
+    host = db.get("HOST", "") or ""
+    if host and db.get("PASSWORD"):
+        host = host[:50] + "..." if len(host) > 50 else host  # don't expose full connection
+    return Response({
+        "engine": engine.split(".")[-1] if engine else "unknown",
+        "host": host or "(sqlite)",
+        "name": db.get("NAME", ""),
+    })
+
+
 def _is_admin(user):
     if not user or not user.is_authenticated:
         return False

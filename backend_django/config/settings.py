@@ -38,12 +38,18 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Use PostgreSQL when DATABASE_URL is set (e.g. Neon, Railway, Render Postgres); otherwise SQLite for local dev.
+import dj_database_url
+_db_env = os.environ.get("DATABASE_URL")
+if _db_env:
+    DATABASES = {"default": dj_database_url.parse(_db_env)}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -81,10 +87,15 @@ if os.environ.get("EMAIL_HOST"):
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
 # CORS: allow all origins if DEBUG or if CORS_ALLOW_ALL_ORIGINS=1 (e.g. to fix "Failed to fetch" on Render)
-# For production, set CORS_ORIGINS to your frontend URL(s) instead and leave CORS_ALLOW_ALL_ORIGINS unset.
+# For production, set CORS_ORIGINS to your frontend URL(s) and/or use regex below for Vercel preview URLs.
 CORS_ALLOW_ALL_ORIGINS = DEBUG or os.environ.get("CORS_ALLOW_ALL_ORIGINS", "").strip().lower() in ("1", "true", "yes")
 _cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
 CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
+# Allow all Vercel deployment URLs (production + preview); no need to add each *.vercel.app subdomain to CORS_ORIGINS.
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://[a-z0-9-]+\.vercel\.app$",
+    r"^https://[a-z0-9-]+-[a-z0-9]+\.vercel\.app$",  # preview: project-abc123-owner.vercel.app
+]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
