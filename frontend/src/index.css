@@ -19,6 +19,11 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 html,
 body {
   cursor: default !important;
@@ -39,6 +44,7 @@ body {
   color: var(--text);
   line-height: 1.5;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* App layout: sidebar left + main content right */
@@ -46,6 +52,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: row;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .main-with-panel {
@@ -62,9 +71,10 @@ body {
   flex: 1;
   max-width: 1200px;
   width: 100%;
+  min-width: 0;
   margin: 0 auto;
   padding: 1.5rem 1.25rem 2rem;
-  min-width: 0;
+  overflow-x: hidden;
 }
 
 .app-main--header-left {
@@ -84,15 +94,18 @@ body {
 .main-content-col {
   flex: 1;
   min-width: 0;
+  overflow-x: hidden;
 }
 @media (max-width: 768px) {
   .app-main--header-left {
     flex-direction: column;
     gap: 1rem;
+    align-items: stretch;
   }
   .page-header-col {
     width: 100%;
     min-width: unset;
+    max-width: 100%;
     position: static;
   }
 }
@@ -285,6 +298,12 @@ body {
   background: var(--bg-card);
   border-radius: 12px;
   border: 1px solid var(--border);
+  overflow-x: hidden;
+}
+@media (max-width: 640px) {
+  .spending-list-view {
+    padding: 1rem;
+  }
 }
 .app-with-veil .spending-list-view {
   background: rgba(15, 15, 25, 0.6);
@@ -557,6 +576,8 @@ body {
 }
 .app-layout:has(.public-nav) main {
   padding-top: 72px;
+  width: 100%;
+  max-width: 100%;
 }
 .navbar.public-nav {
   position: fixed;
@@ -565,7 +586,10 @@ body {
   right: 0;
   z-index: 100;
   width: 100%;
+  max-width: 100vw;
   box-sizing: border-box;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 .navbar.public-nav .navbar-links-right {
   margin-left: auto;
@@ -811,6 +835,15 @@ button.danger:hover {
   overflow: hidden;
   box-shadow: var(--shadow);
 }
+@media (max-width: 640px) {
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-wrap table {
+    min-width: 480px;
+  }
+}
 table {
   width: 100%;
   border-collapse: collapse;
@@ -1048,6 +1081,96 @@ table .actions {
   color: rgba(241, 245, 249, 0.5);
 }
 
+/* Clickable expense row (open detail popup) */
+.expense-row-clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.expense-row-clickable:hover {
+  background: rgba(15, 118, 110, 0.08);
+}
+.app-with-veil .expense-row-clickable:hover {
+  background: rgba(139, 92, 246, 0.12);
+}
+
+/* Expense detail popup (bank-statement style) – portal renders into body */
+.expense-detail-modal-backdrop {
+  z-index: 10000;
+}
+.expense-detail-modal {
+  max-width: 400px;
+}
+.expense-detail-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.expense-detail-modal__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.expense-detail-modal__list {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.expense-detail-modal__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.expense-detail-modal__row:last-of-type {
+  border-bottom: none;
+}
+.expense-detail-modal__row dt {
+  margin: 0;
+  font-weight: 500;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.expense-detail-modal__row dd {
+  margin: 0;
+  text-align: right;
+  word-break: break-word;
+}
+.expense-detail-modal__receipt-link {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+.expense-detail-modal__receipt-img {
+  display: block;
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+.expense-detail-modal__actions {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.app-with-veil .expense-detail-modal__header,
+.app-with-veil .expense-detail-modal__row,
+.app-with-veil .expense-detail-modal__actions {
+  border-color: rgba(139, 92, 246, 0.25);
+}
+.app-with-veil .expense-detail-modal__title { color: #f1f5f9; }
+.app-with-veil .expense-detail-modal__row dt { color: rgba(241, 245, 249, 0.7); }
+.app-with-veil .expense-detail-modal__row dd { color: #e2e8f0; }
+.app-with-veil .expense-detail-modal__receipt-link { color: #a78bfa; }
+
 .client-comment-input {
   width: 100%;
   min-width: 140px;
@@ -1069,9 +1192,13 @@ table .actions {
 }
 
 @media (max-width: 768px) {
-  .app-layout { flex-direction: column; }
+  .app-layout {
+    flex-direction: column;
+    min-width: 0;
+  }
   .main-with-panel {
     flex-direction: column;
+    min-width: 0;
   }
   .spending-log-panel {
     width: 100%;
@@ -1112,15 +1239,111 @@ table .actions {
   .app-with-veil .navbar.sidebar {
     margin: 0.75rem;
     width: calc(100% - 1.5rem);
+    max-width: calc(100vw - 1.5rem);
     height: auto;
     border-radius: 12px;
   }
+  /* Public nav: allow wrap and reserve more space so content doesn't sit under it */
+  .navbar.public-nav {
+    padding: 0.75rem 1rem;
+    min-height: 56px;
+  }
+  .app-layout:has(.public-nav) main {
+    padding-top: 88px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .app-main--header-left {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 @media (max-width: 640px) {
-  .navbar { flex-direction: column; gap: 0.75rem; align-items: stretch; }
-  .navbar-links { flex-wrap: wrap; }
-  .app-main { padding: 1rem; }
-  .summary-grid { grid-template-columns: 1fr 1fr; }
-  .form-row { flex-direction: column; align-items: stretch; }
-  .form-row button { width: 100%; }
+  .navbar {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  .navbar.public-nav {
+    flex-direction: row;
+    align-items: center;
+    min-height: 52px;
+  }
+  .navbar.public-nav .navbar-brand {
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+  .navbar-links {
+    flex-wrap: wrap;
+  }
+  .app-main {
+    padding: 1rem 0.75rem 1.5rem;
+  }
+  .app-layout:has(.public-nav) main {
+    padding-top: 84px;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .summary-card .value {
+    font-size: 1.25rem;
+  }
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .form-row button {
+    width: 100%;
+  }
+  .spending-log-buttons-panel {
+    padding: 1rem;
+  }
+  .card {
+    padding: 1rem;
+  }
+}
+/* Very small screens: single-column summary, tighter padding */
+@media (max-width: 400px) {
+  .app-main {
+    padding: 0.75rem 0.5rem 1.25rem;
+  }
+  .app-layout:has(.public-nav) main {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .navbar.public-nav .navbar-brand {
+    font-size: 0.875rem;
+  }
+  .category-chip {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+  .modal-content {
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+  }
+}
+
+/* API connection banner: mobile-friendly so it doesn't overlap nav/content */
+.api-connection-banner {
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+@media (max-width: 640px) {
+  .api-connection-banner {
+    padding: 0.6rem 0.75rem !important;
+    font-size: 0.8rem !important;
+  }
+  .api-connection-banner small {
+    display: block;
+    font-size: 0.75rem;
+    margin-top: 0.35rem;
+  }
 }

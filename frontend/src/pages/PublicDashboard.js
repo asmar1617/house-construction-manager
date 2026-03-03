@@ -35,20 +35,31 @@ function getWeekStart(dateKey) {
   return `${y}-${m}-${date}`;
 }
 
+/** Sum amounts for expenses dated today. Each expense id counted at most once (avoids double-count if list has duplicates). */
 function getTodaySpend(expenses) {
   const todayKey = getTodayKey();
+  const seen = new Set();
   return (expenses || []).reduce((sum, e) => {
     const dateKey = (e.date || '').split('T')[0];
-    return dateKey === todayKey ? sum + (Number(e.amount) || 0) : sum;
+    if (dateKey !== todayKey) return sum;
+    const id = e.id ?? e._id;
+    if (id != null && seen.has(id)) return sum;
+    if (id != null) seen.add(id);
+    return sum + (Number(e.amount) || 0);
   }, 0);
 }
 
+/** Sum amounts for expenses in the same week as today. Each expense id counted at most once. */
 function getWeeklySpend(expenses) {
   const thisWeekStart = getWeekStart(getTodayKey());
+  const seen = new Set();
   return (expenses || []).reduce((sum, e) => {
     const dateKey = (e.date || '').split('T')[0];
-    if (!dateKey) return sum;
-    return getWeekStart(dateKey) === thisWeekStart ? sum + (Number(e.amount) || 0) : sum;
+    if (!dateKey || getWeekStart(dateKey) !== thisWeekStart) return sum;
+    const id = e.id ?? e._id;
+    if (id != null && seen.has(id)) return sum;
+    if (id != null) seen.add(id);
+    return sum + (Number(e.amount) || 0);
   }, 0);
 }
 

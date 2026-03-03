@@ -40,6 +40,9 @@
   min-height: 100vh;
   z-index: 1;
   color: #f1f5f9;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 .app-with-veil .app-main {

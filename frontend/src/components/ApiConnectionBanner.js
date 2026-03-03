@@ -42,6 +42,7 @@ export default function ApiConnectionBanner() {
 
   return (
     <div
+      className="api-connection-banner"
       style={{
         position: 'sticky',
         top: 0,

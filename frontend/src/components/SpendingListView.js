@@ -1,7 +1,70 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+
+const apiBase = process.env.REACT_APP_API_URL || '/api';
 
 function formatPkr(num) {
   return 'Rs.' + Number(num).toLocaleString('en-PK');
+}
+
+/** Bank-statement style popup: one expense record details. Rendered via portal so it always appears on top. */
+function ExpenseDetailModal({ expense, comments = {}, onClose }) {
+  if (!expense) return null;
+  const dateKey = (expense.date || '').split('T')[0];
+  const comment = comments[expense.id] ?? expense.client_comment ?? '';
+  const baseUrl = apiBase.replace(/\/api\/?$/, '');
+  const imageUrl = expense.image
+    ? (expense.image.startsWith('http') ? expense.image : `${baseUrl}${expense.image.startsWith('/') ? '' : '/'}${expense.image}`)
+    : null;
+  const modalEl = (
+    <div className="modal expense-detail-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Expense details">
+      <div className="modal-content expense-detail-modal" onClick={e => e.stopPropagation()}>
+        <div className="expense-detail-modal__header">
+          <h2 className="expense-detail-modal__title">Expense details</h2>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
+        </div>
+        <dl className="expense-detail-modal__list">
+          <div className="expense-detail-modal__row">
+            <dt>Date</dt>
+            <dd>{dateKey || '—'}</dd>
+          </div>
+          <div className="expense-detail-modal__row">
+            <dt>Amount</dt>
+            <dd><strong>{formatPkr(Number(expense.amount) || 0)}</strong></dd>
+          </div>
+          <div className="expense-detail-modal__row">
+            <dt>Description</dt>
+            <dd>{expense.description || '—'}</dd>
+          </div>
+          <div className="expense-detail-modal__row">
+            <dt>Category</dt>
+            <dd>{expense.category_name || expense.category?.name || '—'}</dd>
+          </div>
+          <div className="expense-detail-modal__row">
+            <dt>Notes</dt>
+            <dd>{expense.notes || '—'}</dd>
+          </div>
+          <div className="expense-detail-modal__row">
+            <dt>Your comment</dt>
+            <dd>{comment || '—'}</dd>
+          </div>
+          {imageUrl && (
+            <div className="expense-detail-modal__row">
+              <dt>Receipt</dt>
+              <dd>
+                <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="expense-detail-modal__receipt-link">View receipt</a>
+                <img src={imageUrl} alt="Receipt" className="expense-detail-modal__receipt-img" />
+              </dd>
+            </div>
+          )}
+        </dl>
+        <div className="expense-detail-modal__actions">
+          <button type="button" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+  return createPortal(modalEl, document.body);
 }
 
 /** Sunday of the week containing dateKey (local time), as YYYY-MM-DD. */
@@ -33,6 +96,7 @@ function SpendingListView({
   getExpenseId = (e) => e.id != null ? e.id : e._id,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [detailExpense, setDetailExpense] = useState(null);
   useEffect(() => {
     if (viewType !== 'categories') setSelectedCategory(null);
   }, [viewType]);
@@ -46,10 +110,17 @@ function SpendingListView({
   let todayExpenses = [];
   if (viewType === 'today') {
     title = "Today's spending";
-    todayExpenses = (expenses || []).filter(e => (e.date || '').split('T')[0] === todayKey);
+    const todayRaw = (expenses || []).filter(e => (e.date || '').split('T')[0] === todayKey);
+    const seenIds = new Set();
+    todayExpenses = todayRaw.filter(e => {
+      const id = e.id ?? e._id;
+      if (id != null && seenIds.has(id)) return false;
+      if (id != null) seenIds.add(id);
+      return true;
+    });
     todayExpenses.forEach(e => { total += Number(e.amount) || 0; });
     items = todayExpenses.map(e => ({
-      key: e.id,
+      key: e.id ?? e._id ?? e.description,
       label: e.description + (e.category_name ? ` (${e.category_name})` : ''),
       amount: Number(e.amount) || 0,
     }));
@@ -121,7 +192,7 @@ function SpendingListView({
           </div>
         </div>
         <div className="card">
-          <div className="card-title">Expenses</div>
+          <div className="card-title">Expenses (click a row to view details)</div>
           <div className="table-wrap">
             <table>
               <thead>
@@ -144,13 +215,17 @@ function SpendingListView({
                   </tr>
                 ) : (
                   todayExpenses.map((e) => (
-                    <tr key={getExpenseId(e)}>
+                    <tr
+                      key={getExpenseId(e)}
+                      className="expense-row-clickable"
+                      onClick={() => setDetailExpense(e)}
+                    >
                       <td>{(e.date || '').split('T')[0]}</td>
                       <td><strong>{formatPkr(Number(e.amount) || 0)}</strong></td>
                       <td>{e.description || '—'}</td>
                       <td>{e.category_name || e.category?.name || '—'}</td>
                       <td>{e.notes || '—'}</td>
-                      <td>
+                      <td onClick={ev => ev.stopPropagation()}>
                         <textarea
                           className="client-comment-input"
                           value={comments[e.id] ?? (e.client_comment || '')}
@@ -159,13 +234,10 @@ function SpendingListView({
                           rows={2}
                         />
                       </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="small"
-                          onClick={() => onSaveComment && onSaveComment(e.id)}
-                          disabled={savingId === e.id}
-                        >
+                      <td onClick={ev => ev.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                        <button type="button" className="small secondary" onClick={(ev) => { ev.stopPropagation(); setDetailExpense(e); }} title="View details">View</button>
+                        {' '}
+                        <button type="button" className="small" onClick={() => onSaveComment && onSaveComment(e.id)} disabled={savingId === e.id}>
                           {savingId === e.id ? 'Saving…' : 'Save'}
                         </button>
                       </td>
@@ -176,6 +248,13 @@ function SpendingListView({
             </table>
           </div>
         </div>
+        {detailExpense && (
+          <ExpenseDetailModal
+            expense={detailExpense}
+            comments={comments}
+            onClose={() => setDetailExpense(null)}
+          />
+        )}
       </div>
     );
   }
@@ -190,7 +269,7 @@ function SpendingListView({
           </div>
         </div>
         <div className="card">
-          <div className="card-title">Expenses</div>
+          <div className="card-title">Expenses (click a row to view details)</div>
           <div className="table-wrap">
             <table>
               <thead>
@@ -213,13 +292,17 @@ function SpendingListView({
                   </tr>
                 ) : (
                   weeklyExpenses.map((e) => (
-                    <tr key={getExpenseId(e)}>
+                    <tr
+                      key={getExpenseId(e)}
+                      className="expense-row-clickable"
+                      onClick={() => setDetailExpense(e)}
+                    >
                       <td>{(e.date || '').split('T')[0]}</td>
                       <td><strong>{formatPkr(Number(e.amount) || 0)}</strong></td>
                       <td>{e.description || '—'}</td>
                       <td>{e.category_name || e.category?.name || '—'}</td>
                       <td>{e.notes || '—'}</td>
-                      <td>
+                      <td onClick={ev => ev.stopPropagation()}>
                         <textarea
                           className="client-comment-input"
                           value={comments[e.id] ?? (e.client_comment || '')}
@@ -228,13 +311,10 @@ function SpendingListView({
                           rows={2}
                         />
                       </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="small"
-                          onClick={() => onSaveComment && onSaveComment(e.id)}
-                          disabled={savingId === e.id}
-                        >
+                      <td onClick={ev => ev.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                        <button type="button" className="small secondary" onClick={(ev) => { ev.stopPropagation(); setDetailExpense(e); }} title="View details">View</button>
+                        {' '}
+                        <button type="button" className="small" onClick={() => onSaveComment && onSaveComment(e.id)} disabled={savingId === e.id}>
                           {savingId === e.id ? 'Saving…' : 'Save'}
                         </button>
                       </td>
@@ -245,6 +325,13 @@ function SpendingListView({
             </table>
           </div>
         </div>
+        {detailExpense && (
+          <ExpenseDetailModal
+            expense={detailExpense}
+            comments={comments}
+            onClose={() => setDetailExpense(null)}
+          />
+        )}
       </div>
     );
   }
@@ -261,7 +348,7 @@ function SpendingListView({
           </div>
         </div>
         <div className="card">
-          <div className="card-title">Expenses</div>
+          <div className="card-title">Expenses (click a row to view details)</div>
           <div className="table-wrap">
             <table>
               <thead>
@@ -284,13 +371,17 @@ function SpendingListView({
                   </tr>
                 ) : (
                   allExpenses.map((e) => (
-                    <tr key={getExpenseId(e)}>
+                    <tr
+                      key={getExpenseId(e)}
+                      className="expense-row-clickable"
+                      onClick={() => setDetailExpense(e)}
+                    >
                       <td>{(e.date || '').split('T')[0]}</td>
                       <td><strong>{formatPkr(Number(e.amount) || 0)}</strong></td>
                       <td>{e.description || '—'}</td>
                       <td>{e.category_name || e.category?.name || '—'}</td>
                       <td>{e.notes || '—'}</td>
-                      <td>
+                      <td onClick={ev => ev.stopPropagation()}>
                         <textarea
                           className="client-comment-input"
                           value={comments[e.id] ?? (e.client_comment || '')}
@@ -299,13 +390,10 @@ function SpendingListView({
                           rows={2}
                         />
                       </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="small"
-                          onClick={() => onSaveComment && onSaveComment(e.id)}
-                          disabled={savingId === e.id}
-                        >
+                      <td onClick={ev => ev.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                        <button type="button" className="small secondary" onClick={(ev) => { ev.stopPropagation(); setDetailExpense(e); }} title="View details">View</button>
+                        {' '}
+                        <button type="button" className="small" onClick={() => onSaveComment && onSaveComment(e.id)} disabled={savingId === e.id}>
                           {savingId === e.id ? 'Saving…' : 'Save'}
                         </button>
                       </td>
@@ -316,6 +404,13 @@ function SpendingListView({
             </table>
           </div>
         </div>
+        {detailExpense && (
+          <ExpenseDetailModal
+            expense={detailExpense}
+            comments={comments}
+            onClose={() => setDetailExpense(null)}
+          />
+        )}
       </div>
     );
   }
@@ -376,13 +471,17 @@ function SpendingListView({
                     </tr>
                   ) : (
                     categoryExpenses.map((e) => (
-                      <tr key={getExpenseId(e)}>
+                      <tr
+                        key={getExpenseId(e)}
+                        className="expense-row-clickable"
+                        onClick={() => setDetailExpense(e)}
+                      >
                         <td>{(e.date || '').split('T')[0]}</td>
                         <td><strong>{formatPkr(Number(e.amount) || 0)}</strong></td>
                         <td>{e.description || '—'}</td>
                         <td>{e.category_name || e.category?.name || '—'}</td>
                         <td>{e.notes || '—'}</td>
-                        <td>
+                        <td onClick={ev => ev.stopPropagation()}>
                           <textarea
                             className="client-comment-input"
                             value={comments[e.id] ?? (e.client_comment || '')}
@@ -391,13 +490,10 @@ function SpendingListView({
                             rows={2}
                           />
                         </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="small"
-                            onClick={() => onSaveComment && onSaveComment(e.id)}
-                            disabled={savingId === e.id}
-                          >
+                        <td onClick={ev => ev.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                          <button type="button" className="small secondary" onClick={(ev) => { ev.stopPropagation(); setDetailExpense(e); }} title="View details">View</button>
+                          {' '}
+                          <button type="button" className="small" onClick={() => onSaveComment && onSaveComment(e.id)} disabled={savingId === e.id}>
                             {savingId === e.id ? 'Saving…' : 'Save'}
                           </button>
                         </td>
@@ -409,6 +505,13 @@ function SpendingListView({
             </div>
           </div>
         ) : null}
+        {detailExpense && (
+          <ExpenseDetailModal
+            expense={detailExpense}
+            comments={comments}
+            onClose={() => setDetailExpense(null)}
+          />
+        )}
       </div>
     );
   }
